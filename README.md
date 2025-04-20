@@ -1,4 +1,4 @@
-```markdown
+
 # Mini IDE SQL Online com Flask
 
 Este projeto é uma mini IDE SQL onde você pode:
