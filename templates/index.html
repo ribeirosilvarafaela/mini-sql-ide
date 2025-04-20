@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini IDE SQL</title>
+
+    <!-- Fonte IBM Plex Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Ace Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.23.4/ext-language_tools.min.js"></script>
+
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <!-- Typed.js -->
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
+    <style>
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 0;
+        }
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 400px;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .hero {
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: transparent;
+            margin-bottom: 50px;
+            position: relative;
+        }
+        .hero h1 {
+            font-weight: 600;
+            font-size: 2.8rem;
+            color: #00FF88;
+        }
+        .typed-text {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            color: #00d27f;
+            min-height: 50px;
+        }
+        .card {
+            color: #00d27f;
+            background-color: #161b22;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            transition: all 0.6s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .card.aparecer {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card h4 {
+            color: #00FF88;
+            font-weight: 600;
+        }
+        .btn-primary, .btn-success, .btn-secondary, .btn-outline-primary, .btn-outline-light {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+        }
+        .table {
+            font-size: 0.9rem;
+        }
+        footer {
+            background-color: #161b22;
+            color: #00FF88;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        a, a:hover {
+            color: #00FF88;
+        }
+
+        label.upload-button {
+            background-color: #161b22;
+            color: #00FF88;
+            border: 1px solid #00FF88;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            width: 100%;
+        }
+        label.upload-button:hover {
+            background-color: #00FF88;
+            color: #161b22;
+        }
+        label.upload-button:active {
+            transform: scale(0.96);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Fundo animado -->
+<div id="particles-js"></div>
+
+<!-- Hero Section -->
+<div class="hero">
+    <h1>Mini IDE SQL</h1>
+    <div class="typed-text"></div>
+</div>
+
+<!-- Conteúdo principal -->
+<div class="container">
+
+    <div class="card p-4">
+        <h4>1. Upload do CSV</h4>
+        <form method="POST" enctype="multipart/form-data" class="row g-3">
+            <div class="col-12">
+                <label class="upload-button">
+                    📁 Escolher CSV
+                    <input type="file" name="csv_file" accept=".csv" style="display: none;" required onchange="this.parentNode.querySelector('span').textContent = this.files[0]?.name || 'Escolher CSV';">
+                    <span class="small text-muted ms-auto"></span>
+                </label>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary mt-2">Upload</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card p-4">
+        <h4>2. Rode uma consulta SQL</h4>
+        <form method="POST" onsubmit="return beforeSubmit();">
+            <div id="editor" style="height: 300px; width: 100%;">SELECT * FROM tabela_csv;</div>
+            <textarea name="query" id="query" style="display:none;"></textarea>
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <button type="submit" class="btn btn-success">Executar Consulta</button>
+                <button type="button" class="btn btn-secondary" onclick="limparEditor()">Limpar Editor</button>
+            </div>
+        </form>
+    </div>
+
+    {% if tabelas %}
+    <div class="card p-4">
+        <h5>📂 Tabelas Disponíveis</h5>
+        <ul>
+            {% for t in tabelas %}
+            <li><code>{{ t }}</code></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if historico %}
+    <div class="card p-4">
+        <h5>📜 Histórico de Consultas</h5>
+        <ul class="list-unstyled">
+            {% for consulta in historico %}
+            <li class="mb-2">
+                <button type="button" class="btn btn-outline-success btn-sm w-100 text-start" onclick="preencherEditor(`{{ consulta }}`)">
+                    {{ consulta }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if mensagem %}
+    <div class="alert alert-info text-center" role="alert">
+        {{ mensagem }}
+    </div>
+    {% endif %}
+
+    {% if resultado %}
+    <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Resultado da Consulta:</h5>
+            <a href="{{ url_for('exportar_csv') }}" class="btn btn-outline-primary btn-sm">⬇️ Exportar Resultado</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        {% for col in colunas %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in resultado %}
+                    <tr>
+                        {% for cell in row %}
+                        <td>{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<footer>
+    💬 Conectado ao Banco: SQLite (Em Memória) | 🗂️ Tabelas Carregadas: {{ tabelas|length }}
+</footer>
+
+<!-- Scripts -->
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/sql");
+    editor.setOptions({
+        fontSize: "14px",
+        showPrintMargin: false,
+        highlightActiveLine: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        showLineNumbers: true,
+        tabSize: 4,
+        useSoftTabs: true
+    });
+
+    var autocompleteData = {{ autocomplete_data | tojson }};
+    ace.require("ace/ext/language_tools").addCompleter({
+        getCompletions: function(editor, session, pos, prefix, callback) {
+            callback(null, autocompleteData.map(function(entry) {
+                return {
+                    caption: entry.name,
+                    value: entry.name,
+                    meta: entry.meta
+                };
+            }));
+        }
+    });
+
+    function beforeSubmit() {
+        document.getElementById('query').value = editor.getValue();
+        return true;
+    }
+
+    function limparEditor() {
+        editor.setValue('');
+    }
+
+    function preencherEditor(texto) {
+        editor.setValue(texto, -1);
+    }
+
+
+    particlesJS('particles-js', {
+        "particles": {
+            "number": { "value": 45, "density": { "enable": true, "value_area": 800 } },
+            "color": { "value": "#00FF88" },
+            "shape": { "type": "circle" },
+            "opacity": { "value": 0.2, "random": true },
+            "size": { "value": 3, "random": true },
+            "move": { "enable": true, "speed": 0.8, "direction": "none", "random": true, "straight": false }
+        },
+        "interactivity": { "events": { "onhover": { "enable": false } } },
+        "retina_detect": true
+    });
+
+    var typed = new Typed('.typed-text', {
+        strings: [
+            "SELECT * FROM clientes;",
+            "INSERT INTO vendas (produto, quantidade) VALUES ('Livro', 2);",
+            "UPDATE contas SET saldo = saldo - 100 WHERE id = 123;",
+            "DELETE FROM usuarios WHERE ativo = 0;",
+            "SELECT nome, email FROM usuarios WHERE status = 'ativo';"
+        ],
+        typeSpeed: 40,
+        backSpeed: 25,
+        backDelay: 1500,
+        loop: true
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('aparecer');
+            }, 100 * index);
+        });
+    });
+</script>
+
+</body>
+</html>
