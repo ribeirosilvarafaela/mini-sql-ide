@@ -236,8 +236,10 @@
 </div>
 
 <footer>
-    🗂️ Tabelas Carregadas: {{ tabelas|length }}
+    🗂️ Tabelas Carregadas: {{ tabelas|length }} | 
+    <a href="{{ url_for('cheatsheet') }}">📚 Cheat Sheet</a>
 </footer>
+
 
 <!-- Scripts -->
 <script>
@@ -348,7 +350,5 @@ function mostrarBotaoUpload() {
     }
 }
 </script>
-
-
 </body>
 </html>

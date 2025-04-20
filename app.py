@@ -10,7 +10,7 @@ import glob
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'sua_chave_super_secreta_aqui'
+app.secret_key = 'depois_eu_vejo_isso'
 
 # Banco de dados em memória
 db_conn = sqlite3.connect(':memory:', check_same_thread=False)
@@ -22,6 +22,11 @@ def index():
     tabelas = buscar_tabelas()
     autocomplete_data = []
     return render_template('index.html', tabelas=tabelas, autocomplete_data=autocomplete_data)
+
+# Cheatsheet
+@app.route('/cheatsheet')
+def cheatsheet():
+    return render_template('cheatsheet.html')
 
 # Upload CSV
 @app.route('/upload_csv', methods=['POST'])

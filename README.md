@@ -68,6 +68,7 @@ Abra [http://localhost:10000/](http://localhost:10000/) no seu navegador.
 - Histórico das últimas consultas
 - Exportação do resultado de consultas para CSV
 - Limpeza automática de arquivos temporários
+- Cheatsheet com comandos útei no SQLite 
 
 ---
 
