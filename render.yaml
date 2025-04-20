@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: mini-ide-sql
+    env: python
+    buildCommand: ""
+    startCommand: python app.py
+    plan: free
