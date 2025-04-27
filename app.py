@@ -76,20 +76,26 @@ def configurar_upload():
         tratar_erro(e, "Erro ao configurar upload")
         return redirect(url_for('index'))
 
-# Finalizar upload
 @app.route('/finalizar_upload', methods=['POST'])
 def finalizar_upload():
     try:
         tipos = request.form
-        temp_json_path = session['temp_json_path']
+        temp_json_path = session.get('temp_json_path')
+        table_name = session.get('temp_table_name')
+
+        if not temp_json_path or not table_name:
+            flash('Erro interno: upload não encontrado. Faça novamente.', 'danger')
+            return redirect(url_for('index'))
+
         df = pd.read_json(temp_json_path)
-        table_name = session['temp_table_name']
 
         for coluna in df.columns:
-            tipo_escolhido = tipos[coluna]
+            tipo_escolhido = tipos.get(coluna)
             if not validar_coluna(df[coluna], tipo_escolhido):
-                flash(f"Erro: A coluna '{coluna}' não pode ser convertida para {tipo_escolhido}.", "danger")
-                return redirect(url_for('configurar_upload'))
+                colunas = list(df.columns)
+                sugestoes_tipos, exemplos = detectar_tipos(df)
+                mensagem = f"Erro: A coluna '{coluna}' não pode ser convertida para {tipo_escolhido}."
+                return render_template('configurar_upload.html', colunas=colunas, sugestoes=sugestoes_tipos, exemplos=exemplos, mensagem=mensagem)
 
         campos = ", ".join([f'"{col}" {tipos[col]}' for col in df.columns])
         db_cursor.execute(f'DROP TABLE IF EXISTS "{table_name}";')
@@ -100,7 +106,9 @@ def finalizar_upload():
             db_cursor.execute(insert_sql, tuple(row))
 
         db_conn.commit()
-        os.remove(temp_json_path)
+
+        if os.path.exists(temp_json_path):
+            os.remove(temp_json_path)
         session.pop('temp_json_path', None)
         session.pop('temp_table_name', None)
 

@@ -8,6 +8,12 @@
 <body class="bg-dark text-light">
 
 <div class="container py-5">
+    {% if mensagem %}
+    <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+        {{ mensagem }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}    
     <h2 class="mb-4">🛠️ Configurar Tipos de Colunas</h2>
     <form method="POST" action="/finalizar_upload" enctype="multipart/form-data" class="row g-3">
         <table class="table table-dark table-striped">
